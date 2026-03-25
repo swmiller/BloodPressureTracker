@@ -22,7 +22,7 @@ public class BloodPressureService
 
     public async Task<List<BloodPressureReading>> GetAllReadingsAsync()
     {
-        if (_readings == null || _readings.Count == 0)
+        if (_readings.Count == 0)
         {
             await LoadDataAsync();
         }
@@ -31,7 +31,7 @@ public class BloodPressureService
 
     public async Task<BloodPressureReading?> GetReadingByIdAsync(Guid id)
     {
-        if (_readings == null || _readings.Count == 0)
+        if (_readings.Count == 0)
         {
             await LoadDataAsync();
         }
@@ -40,7 +40,7 @@ public class BloodPressureService
 
     public async Task<BloodPressureReading?> GetReadingAsync(DateTime date, TimeOfDay timeOfDay)
     {
-        if (_readings == null || _readings.Count == 0)
+        if (_readings.Count == 0)
         {
             await LoadDataAsync();
         }
@@ -91,7 +91,7 @@ public class BloodPressureService
 
     public async Task<List<BloodPressureReading>> GetReadingsForWeekAsync(DateTime startDate)
     {
-        if (_readings == null || _readings.Count == 0)
+        if (_readings.Count == 0)
         {
             await LoadDataAsync();
         }
