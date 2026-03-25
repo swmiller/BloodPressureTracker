@@ -1,6 +1,4 @@
 @page "/history"
-@using BloodPressureTracker.Models
-@using BloodPressureTracker.Services
 @inject BloodPressureService BPService
 @inject IJSRuntime JS
 
@@ -55,7 +53,8 @@
                             <td>@reading.Date.ToString("MMM dd, yyyy")</td>
                             <td>@reading.TimeOfDay</td>
                             <td class="bp-value">
-                                <span class="systolic">@reading.Systolic</span>/<span class="diastolic">@reading.Diastolic</span>
+                                <span class="systolic">@reading.Systolic</span>/<span
+                                class="diastolic">@reading.Diastolic</span>
                             </td>
                             <td class="notes-cell">@reading.Notes</td>
                             <td>

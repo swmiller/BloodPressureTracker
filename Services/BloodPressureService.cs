@@ -95,7 +95,7 @@ public class BloodPressureService
         {
             await LoadDataAsync();
         }
-        
+
         var endDate = startDate.AddDays(7);
         return _readings
             .Where(r => r.Date >= startDate && r.Date < endDate)

@@ -1,6 +1,4 @@
 @page "/print"
-@using BloodPressureTracker.Models
-@using BloodPressureTracker.Services
 @inject BloodPressureService BPService
 @inject IJSRuntime JS
 
@@ -102,8 +100,8 @@
 
     private BloodPressureReading? GetReading(DateTime date, TimeOfDay timeOfDay)
     {
-        return allReadings.FirstOrDefault(r => 
-            r.Date.Date == date.Date && 
+        return allReadings.FirstOrDefault(r =>
+            r.Date.Date == date.Date &&
             r.TimeOfDay == timeOfDay);
     }
 

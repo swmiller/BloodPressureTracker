@@ -1,6 +1,4 @@
 ﻿@page "/"
-@using BloodPressureTracker.Models
-@using BloodPressureTracker.Services
 @inject BloodPressureService BPService
 
 <PageTitle>Blood Pressure Tracker</PageTitle>
@@ -81,7 +79,7 @@
     protected override async Task OnInitializedAsync()
     {
         await BPService.InitializeAsync();
-        
+
         // Set default time based on current hour
         var hour = DateTime.Now.Hour;
         if (hour < 12)
@@ -94,7 +92,7 @@
 
     private bool IsValidInput()
     {
-        return systolic.HasValue && diastolic.HasValue && 
+        return systolic.HasValue && diastolic.HasValue &&
                systolic.Value > 0 && diastolic.Value > 0 &&
                systolic.Value <= 300 && diastolic.Value <= 200;
     }
@@ -118,10 +116,10 @@
         };
 
         await BPService.AddReadingAsync(reading);
-        
+
         message = $"Blood pressure reading saved: {systolic}/{diastolic}";
         isError = false;
-        
+
         // Clear the form after successful save
         await Task.Delay(2000);
         ClearForm();
