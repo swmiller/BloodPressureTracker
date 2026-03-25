@@ -1,0 +1,138 @@
+﻿@page "/"
+@using BloodPressureTracker.Models
+@using BloodPressureTracker.Services
+@inject BloodPressureService BPService
+
+<PageTitle>Blood Pressure Tracker</PageTitle>
+
+<div class="entry-container">
+    <h1 class="page-title">Blood Pressure Entry</h1>
+
+    <div class="entry-form">
+        <div class="form-group">
+            <label class="form-label">Date:</label>
+            <input type="date" class="form-input" @bind="selectedDate" />
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Time of Day:</label>
+            <div class="button-group">
+                <button class="time-button @(selectedTimeOfDay == TimeOfDay.Morning ? "active" : "")"
+                        @onclick="() => selectedTimeOfDay = TimeOfDay.Morning">
+                    Morning
+                </button>
+                <button class="time-button @(selectedTimeOfDay == TimeOfDay.Midday ? "active" : "")"
+                        @onclick="() => selectedTimeOfDay = TimeOfDay.Midday">
+                    Midday
+                </button>
+                <button class="time-button @(selectedTimeOfDay == TimeOfDay.Evening ? "active" : "")"
+                        @onclick="() => selectedTimeOfDay = TimeOfDay.Evening">
+                    Evening
+                </button>
+            </div>
+        </div>
+
+        <div class="bp-inputs">
+            <div class="form-group">
+                <label class="form-label">Systolic (Top Number):</label>
+                <input type="number" class="form-input bp-input" @bind="systolic" placeholder="120" min="0" max="300" />
+            </div>
+
+            <div class="slash">/</div>
+
+            <div class="form-group">
+                <label class="form-label">Diastolic (Bottom Number):</label>
+                <input type="number" class="form-input bp-input" @bind="diastolic" placeholder="80" min="0" max="200" />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Notes (optional):</label>
+            <textarea class="form-input" @bind="notes" rows="3" placeholder="Any additional notes..."></textarea>
+        </div>
+
+        @if (!string.IsNullOrEmpty(message))
+        {
+            <div class="message @(isError ? "error-message" : "success-message")">
+                @message
+            </div>
+        }
+
+        <div class="button-group-actions">
+            <button class="btn btn-primary" @onclick="SaveReading" disabled="@(!IsValidInput())">
+                Save Reading
+            </button>
+            <button class="btn btn-secondary" @onclick="ClearForm">
+                Clear
+            </button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private DateTime selectedDate = DateTime.Today;
+    private TimeOfDay selectedTimeOfDay = TimeOfDay.Morning;
+    private int? systolic;
+    private int? diastolic;
+    private string notes = string.Empty;
+    private string message = string.Empty;
+    private bool isError = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await BPService.InitializeAsync();
+        
+        // Set default time based on current hour
+        var hour = DateTime.Now.Hour;
+        if (hour < 12)
+            selectedTimeOfDay = TimeOfDay.Morning;
+        else if (hour < 17)
+            selectedTimeOfDay = TimeOfDay.Midday;
+        else
+            selectedTimeOfDay = TimeOfDay.Evening;
+    }
+
+    private bool IsValidInput()
+    {
+        return systolic.HasValue && diastolic.HasValue && 
+               systolic.Value > 0 && diastolic.Value > 0 &&
+               systolic.Value <= 300 && diastolic.Value <= 200;
+    }
+
+    private async Task SaveReading()
+    {
+        if (!IsValidInput())
+        {
+            message = "Please enter valid blood pressure values.";
+            isError = true;
+            return;
+        }
+
+        var reading = new BloodPressureReading
+        {
+            Date = selectedDate,
+            TimeOfDay = selectedTimeOfDay,
+            Systolic = systolic,
+            Diastolic = diastolic,
+            Notes = notes
+        };
+
+        await BPService.AddReadingAsync(reading);
+        
+        message = $"Blood pressure reading saved: {systolic}/{diastolic}";
+        isError = false;
+        
+        // Clear the form after successful save
+        await Task.Delay(2000);
+        ClearForm();
+    }
+
+    private void ClearForm()
+    {
+        systolic = null;
+        diastolic = null;
+        notes = string.Empty;
+        message = string.Empty;
+        isError = false;
+    }
+}

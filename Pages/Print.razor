@@ -1,0 +1,123 @@
+@page "/print"
+@using BloodPressureTracker.Models
+@using BloodPressureTracker.Services
+@inject BloodPressureService BPService
+@inject IJSRuntime JS
+
+<PageTitle>Print View - Blood Pressure Tracker</PageTitle>
+
+<div class="print-container">
+    <div class="no-print">
+        <div class="print-header">
+            <h1 class="page-title">10-Week Blood Pressure Record</h1>
+            <div class="print-controls">
+                <label>
+                    Start Date:
+                    <input type="date" @bind="startDate" @bind:event="oninput" />
+                </label>
+                <button class="btn btn-primary" @onclick="PrintPage">Print</button>
+                <a href="/" class="btn btn-secondary">Back to Entry</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-content">
+        <div class="print-title">
+            <h2>Blood Pressure Record</h2>
+            <p>10-Week Tracking Period: @startDate.ToString("MMM dd, yyyy") - @startDate.AddDays(70).ToString("MMM dd, yyyy")</p>
+        </div>
+
+        @for (int week = 1; week <= 10; week++)
+        {
+            var weekStart = startDate.AddDays((week - 1) * 7);
+            <div class="week-section">
+                <h3 class="week-title">Week @week</h3>
+                <table class="print-table">
+                    <thead>
+                        <tr>
+                            <th class="day-header">Day</th>
+                            <th class="time-header">Time</th>
+                            <th class="bp-header">Blood Pressure</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var day in GetDaysOfWeek())
+                        {
+                            var dayDate = weekStart.AddDays(day.Item1);
+                            var morningReading = GetReading(dayDate, TimeOfDay.Morning);
+                            var middayReading = GetReading(dayDate, TimeOfDay.Midday);
+                            var eveningReading = GetReading(dayDate, TimeOfDay.Evening);
+
+                            <tr class="day-row">
+                                <td class="day-cell" rowspan="3">
+                                    <div class="day-name">@day.Item2</div>
+                                    <div class="day-date">@dayDate.ToString("MM/dd")</div>
+                                </td>
+                                <td class="time-cell">Morning</td>
+                                <td class="bp-cell">@FormatReading(morningReading)</td>
+                            </tr>
+                            <tr>
+                                <td class="time-cell">Midday</td>
+                                <td class="bp-cell">@FormatReading(middayReading)</td>
+                            </tr>
+                            <tr class="last-time-row">
+                                <td class="time-cell">Evening</td>
+                                <td class="bp-cell">@FormatReading(eveningReading)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    private DateTime startDate = DateTime.Today.AddDays(-(int)DateTime.Today.DayOfWeek); // Start of current week
+    private List<BloodPressureReading> allReadings = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        allReadings = await BPService.GetAllReadingsAsync();
+    }
+
+    private List<(int, string)> GetDaysOfWeek()
+    {
+        return new List<(int, string)>
+        {
+            (0, "Sunday"),
+            (1, "Monday"),
+            (2, "Tuesday"),
+            (3, "Wednesday"),
+            (4, "Thursday"),
+            (5, "Friday"),
+            (6, "Saturday")
+        };
+    }
+
+    private BloodPressureReading? GetReading(DateTime date, TimeOfDay timeOfDay)
+    {
+        return allReadings.FirstOrDefault(r => 
+            r.Date.Date == date.Date && 
+            r.TimeOfDay == timeOfDay);
+    }
+
+    private string FormatReading(BloodPressureReading? reading)
+    {
+        if (reading == null || !reading.Systolic.HasValue || !reading.Diastolic.HasValue)
+        {
+            return "";
+        }
+        return $"{reading.Systolic}/{reading.Diastolic}";
+    }
+
+    private async Task PrintPage()
+    {
+        await JS.InvokeVoidAsync("window.print");
+    }
+}
